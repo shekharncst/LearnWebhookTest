@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from event_lakehouse.ingestion import InvalidEvent, emf_metric, raw_object_key
+from event_lakehouse.ingestion import emf_metric, InvalidEvent, raw_object_key
 
 
 EVENT = {
