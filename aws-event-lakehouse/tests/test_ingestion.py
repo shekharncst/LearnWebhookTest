@@ -3,7 +3,6 @@ import unittest
 
 from event_lakehouse import ingestion
 
-
 EVENT = {
     "eventType": "customer_order",
     "payloadType": "INLINE",
