@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 REQUIRED_FIELDS = {
@@ -32,7 +32,7 @@ def validate_event(event: dict[str, Any]) -> None:
     if event["op"] not in {"I", "U", "D"}:
         raise InvalidEvent("op must be I, U, or D")
     try:
-        datetime.fromisoformat(str(event["eventTime"]).replace("Z", "+00:00"))
+        datetime.fromisoformat(str(event["eventTime"]))
     except ValueError as exc:
         raise InvalidEvent("eventTime must be ISO-8601") from exc
 
@@ -40,7 +40,7 @@ def validate_event(event: dict[str, Any]) -> None:
 def raw_object_key(event: dict[str, Any]) -> str:
     """Return a stable key: replaying the same event targets the same object."""
     validate_event(event)
-    occurred = datetime.fromisoformat(str(event["eventTime"]).replace("Z", "+00:00"))
+    occurred = datetime.fromisoformat(str(event["eventTime"]))
     digest_input = f'{event["eventType"]}#{event["businessKey"]}#{event["messageId"]}'
     event_id = hashlib.sha256(digest_input.encode()).hexdigest()[:20]
     return (
@@ -57,7 +57,7 @@ def canonical_json(event: dict[str, Any]) -> bytes:
 
 def emf_metric(name: str, value: float, event_type: str) -> str:
     """Create one CloudWatch Embedded Metric Format log entry."""
-    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    now_ms = int(datetime.now(UTC).timestamp() * 1000)
     body = {
         "_aws": {
             "Timestamp": now_ms,
