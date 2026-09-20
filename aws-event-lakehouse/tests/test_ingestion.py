@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from event_lakehouse.ingestion import emf_metric, InvalidEvent, raw_object_key
+from event_lakehouse import ingestion
 
 
 EVENT = {
@@ -18,8 +18,8 @@ EVENT = {
 
 
 def test_raw_key_is_partitioned_and_replay_safe():
-    first = raw_object_key(EVENT)
-    second = raw_object_key(dict(EVENT))
+    first = ingestion.raw_object_key(EVENT)
+    second = ingestion.raw_object_key(dict(EVENT))
 
     assert first == second
     assert first.startswith(
@@ -31,12 +31,12 @@ def test_invalid_event_reports_missing_contract_field():
     invalid = dict(EVENT)
     del invalid["messageId"]
 
-    with pytest.raises(InvalidEvent, match="messageId"):
-        raw_object_key(invalid)
+    with pytest.raises(ingestion.InvalidEvent, match="messageId"):
+        ingestion.raw_object_key(invalid)
 
 
 def test_metric_uses_low_cardinality_event_type_dimension():
-    metric = json.loads(emf_metric("EventsAccepted", 1, "customer_order"))
+    metric = json.loads(ingestion.emf_metric("EventsAccepted", 1, "customer_order"))
 
     assert metric["_aws"]["CloudWatchMetrics"][0]["Namespace"] == "Portfolio/EventLakehouse"
     assert metric["EventType"] == "customer_order"
