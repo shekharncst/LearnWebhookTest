@@ -1,0 +1,1 @@
+"""Event-lakehouse ingestion domain."""
