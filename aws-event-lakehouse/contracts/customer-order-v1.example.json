@@ -1,0 +1,14 @@
+{
+  "eventType": "customer_order",
+  "payloadType": "INLINE",
+  "messageId": "msg-0001",
+  "eventTime": "2026-09-20T12:00:00Z",
+  "businessKey": "order-1001",
+  "op": "I",
+  "schemaVersion": "1.0",
+  "payload": {
+    "customerId": "customer-42",
+    "amount": 74.25,
+    "currency": "USD"
+  }
+}
