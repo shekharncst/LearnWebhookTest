@@ -1,0 +1,28 @@
+name: event-lakehouse-ci
+
+on:
+  pull_request:
+    paths:
+      - "aws-event-lakehouse/**"
+  push:
+    branches: ["master"]
+    paths:
+      - "aws-event-lakehouse/**"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aws-event-lakehouse
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest
