@@ -1,6 +1,5 @@
 import json
-
-import pytest
+import unittest
 
 from event_lakehouse import ingestion
 
@@ -17,27 +16,31 @@ EVENT = {
 }
 
 
-def test_raw_key_is_partitioned_and_replay_safe():
-    first = ingestion.raw_object_key(EVENT)
-    second = ingestion.raw_object_key(dict(EVENT))
+class TestIngestion(unittest.TestCase):
+    def test_raw_key_is_partitioned_and_replay_safe(self):
+        first = ingestion.raw_object_key(EVENT)
+        second = ingestion.raw_object_key(dict(EVENT))
 
-    assert first == second
-    assert first.startswith(
-        "raw/event_type=customer_order/year=2026/month=09/day=20/hour=12/"
-    )
+        self.assertEqual(first, second)
+        self.assertTrue(
+            first.startswith(
+                "raw/event_type=customer_order/year=2026/month=09/day=20/hour=12/"
+            )
+        )
 
+    def test_invalid_event_reports_missing_contract_field(self):
+        invalid = dict(EVENT)
+        del invalid["messageId"]
 
-def test_invalid_event_reports_missing_contract_field():
-    invalid = dict(EVENT)
-    del invalid["messageId"]
+        with self.assertRaisesRegex(ingestion.InvalidEvent, "messageId"):
+            ingestion.raw_object_key(invalid)
 
-    with pytest.raises(ingestion.InvalidEvent, match="messageId"):
-        ingestion.raw_object_key(invalid)
+    def test_metric_uses_low_cardinality_event_type_dimension(self):
+        metric = json.loads(ingestion.emf_metric("EventsAccepted", 1, "customer_order"))
 
-
-def test_metric_uses_low_cardinality_event_type_dimension():
-    metric = json.loads(ingestion.emf_metric("EventsAccepted", 1, "customer_order"))
-
-    assert metric["_aws"]["CloudWatchMetrics"][0]["Namespace"] == "Portfolio/EventLakehouse"
-    assert metric["EventType"] == "customer_order"
-    assert metric["EventsAccepted"] == 1
+        self.assertEqual(
+            metric["_aws"]["CloudWatchMetrics"][0]["Namespace"],
+            "Portfolio/EventLakehouse",
+        )
+        self.assertEqual(metric["EventType"], "customer_order")
+        self.assertEqual(metric["EventsAccepted"], 1)
